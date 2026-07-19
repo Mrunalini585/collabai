@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { CheckSquare, Clock, AlertTriangle, Calendar, ArrowRight, Sparkles, Loader2, Zap, TrendingUp } from 'lucide-react'
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid
-} from 'recharts'
 import { api } from '../../api/client'
 import { Card, Badge, Spinner } from '../../components/ui'
 import { useAuth } from '../../context/AuthContext'
@@ -138,42 +135,71 @@ export default function StudentDashboard() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Pie chart */}
+            {/* Task Status Distribution */}
             <Card className="p-5">
               <div className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Task Status Distribution</div>
-              <div className="flex items-center gap-4 animate-fade-in">
-                <ResponsiveContainer width="60%" height={150}>
-                  <PieChart>
-                    <Pie data={statusData} dataKey="value" innerRadius={40} outerRadius={60} paddingAngle={3}>
-                      {statusData.map((_, i) => <Cell key={i} fill={['#94a3b8', '#6366f1', '#f59e0b', '#22c55e'][i]} />)}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-1.5 flex-1">
-                  {statusData.map((d, i) => (
-                    <div key={d.name} className="flex items-center gap-2 text-xs">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: ['#94a3b8', '#6366f1', '#f59e0b', '#22c55e'][i] }} />
-                      <span className="text-slate-500 truncate">{d.name}</span>
-                      <span className="font-bold text-slate-800 ml-auto">{d.value}</span>
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                {/* Stacked bar */}
+                <div className="h-4 w-full rounded-full bg-slate-100 flex overflow-hidden">
+                  {statusData.map((d, i) => {
+                    const totalTasks = tasks.length || 1;
+                    const percent = Math.round((d.value / totalTasks) * 100);
+                    if (d.value === 0) return null;
+                    return (
+                      <div 
+                        key={d.name}
+                        style={{ width: `${percent}%`, backgroundColor: ['#94a3b8', '#6366f1', '#f59e0b', '#22c55e'][i] }}
+                        className="h-full transition-all duration-500"
+                        title={`${d.name}: ${d.value} tasks (${percent}%)`}
+                      />
+                    );
+                  })}
+                </div>
+                {/* List Legend */}
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  {statusData.map((d, i) => {
+                    const totalTasks = tasks.length || 1;
+                    const percent = Math.round((d.value / totalTasks) * 100);
+                    return (
+                      <div key={d.name} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ['#94a3b8', '#6366f1', '#f59e0b', '#22c55e'][i] }} />
+                          <span className="text-slate-500 truncate">{d.name}</span>
+                        </div>
+                        <span className="font-semibold text-slate-800 shrink-0 ml-1">{d.value} ({percent}%)</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </Card>
 
-            {/* Bar chart */}
+            {/* Priority Breakdown */}
             <Card className="p-5">
               <div className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Priority Breakdown</div>
-              <ResponsiveContainer width="100%" height={150}>
-                <BarChart data={priorityData} barSize={28}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {priorityData.map((_, i) => <Cell key={i} fill={['#22c55e', '#f59e0b', '#f43f5e'][i]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="space-y-3.5">
+                {priorityData.map((d, i) => {
+                  const maxVal = Math.max(...priorityData.map(item => item.value)) || 1;
+                  const percent = Math.round((d.value / maxVal) * 100);
+                  const colors = ['bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
+                  const textColors = ['text-emerald-700', 'text-amber-700', 'text-rose-700'];
+                  
+                  return (
+                    <div key={d.name} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-medium text-slate-500">{d.name} Priority</span>
+                        <span className={`font-semibold ${textColors[i]}`}>{d.value} tasks</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div 
+                          style={{ width: `${percent}%` }}
+                          className={`h-full rounded-full ${colors[i]} transition-all duration-500`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           </div>
         </div>
