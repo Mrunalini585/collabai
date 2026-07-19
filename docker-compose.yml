@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: collabai
+      POSTGRES_PASSWORD: collabai
+      POSTGRES_DB: collabai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://collabai:collabai@postgres:5432/collabai
+      MONGO_URI: mongodb://mongo:27017
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - mongo
+
+volumes:
+  postgres_data:
+  mongo_data:
