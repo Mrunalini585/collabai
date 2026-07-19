@@ -21,6 +21,19 @@ app.add_middleware(
 # Auto-create tables (dev convenience). For production, use: alembic upgrade head
 Base.metadata.create_all(bind=engine)
 
+# Auto-seed database if empty
+try:
+    from app.database import SessionLocal
+    from app.models.user import User
+    from seed import seed_db
+    db = SessionLocal()
+    if db.query(User).count() == 0:
+        print("Empty database detected. Running seed script...")
+        seed_db()
+    db.close()
+except Exception as e:
+    print(f"Failed to auto-seed on startup: {e}")
+
 
 @app.get("/api/health")
 def health():
