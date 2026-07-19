@@ -101,8 +101,9 @@ function handleMock(url: string, method: string, body: any): any {
     tasks.push(t); localStorage.setItem("demo_tasks", JSON.stringify(tasks))
     return { data: t }
   }
-  if (url.match(/\/api\/tasks\/\d+/) && method === "PUT") {
-    const tid = parseInt(url.split("/").pop() || "0")
+  if (url.includes("/tasks/") && (method === "PATCH" || method === "PUT")) {
+    const parts = url.split("/")
+    const tid = parseInt(parts[parts.length - 1])
     const updated = tasks.map((t: any) => t.id === tid ? { ...t, ...body } : t)
     localStorage.setItem("demo_tasks", JSON.stringify(updated))
     return { data: updated.find((t: any) => t.id === tid) }
@@ -150,6 +151,68 @@ function handleMock(url: string, method: string, body: any): any {
   }
   if (url.includes("/api/github/pulls")) {
     return { data: [{ title: "feat: Integrate Gemini API into Requirement Analyzer", number: 4, user: { login: "aman_dev" }, state: "open" }] }
+  }
+
+  // PASSWORD RESET
+  if (url.includes("/api/auth/reset-password") && method === "POST") {
+    return { data: { message: "Password reset successful" } }
+  }
+
+  // COMMENTS
+  if (url.includes("/comments") && method === "GET") {
+    const tid = parseInt(url.split("/tasks/")[1].split("/comments")[0])
+    let mockComments = getStored("demo_comments", [
+      { id: 1, task_id: 101, user_id: 2, content: "Drafting the initial diagram layout now.", created_at: new Date(Date.now() - 3600000).toISOString(), user_name: "Rahul (Leader)" }
+    ])
+    return { data: mockComments.filter((c: any) => c.task_id === tid) }
+  }
+  if (url.includes("/comments") && method === "POST") {
+    const tid = parseInt(url.split("/tasks/")[1].split("/comments")[0])
+    let mockComments = getStored("demo_comments", [])
+    const stored = localStorage.getItem("mock_user")
+    const author = stored ? JSON.parse(stored) : { id: 2, name: "Rahul (Leader)", email: "leader@collabai.com" }
+    const c = { id: Date.now(), task_id: tid, user_id: author.id, content: body.content, created_at: new Date().toISOString(), user_name: author.name }
+    mockComments.push(c)
+    localStorage.setItem("demo_comments", JSON.stringify(mockComments))
+    return { data: c }
+  }
+
+  // ANNOUNCEMENTS
+  if (url.includes("/announcements") && method === "GET") {
+    let mockAnnouncements = getStored("demo_announcements", [
+      { id: 1, project_id: 1, user_id: 2, title: "Mid-Term Review Schedule", content: "Our project guide confirmed the mid-term evaluations will be held this Thursday. Please ensure all Kanban tasks in 'Testing' are completed.", created_at: new Date(Date.now() - 86400000).toISOString(), author_name: "Rahul (Leader)" }
+    ])
+    return { data: mockAnnouncements }
+  }
+  if (url.includes("/announcements") && method === "POST") {
+    let mockAnnouncements = getStored("demo_announcements", [])
+    const stored = localStorage.getItem("mock_user")
+    const author = stored ? JSON.parse(stored) : { id: 2, name: "Rahul (Leader)", email: "leader@collabai.com" }
+    const a = { id: Date.now(), project_id: 1, user_id: author.id, title: body.title, content: body.content, created_at: new Date().toISOString(), author_name: author.name }
+    mockAnnouncements.unshift(a)
+    localStorage.setItem("demo_announcements", JSON.stringify(mockAnnouncements))
+    return { data: a }
+  }
+
+  // NOTIFICATIONS
+  if (url.includes("/api/notifications/read/") && method === "POST") {
+    const nid = parseInt(url.split("/read/").pop() || "0")
+    let mockNotifs = getStored("demo_notifications", [
+      { id: 1, text: "Aman moved 'JWT authorization middleware' to Testing", created_at: new Date(Date.now() - 4 * 3600000).toISOString(), unread: true },
+      { id: 2, text: "New Meeting 'Sprint 1 Planning & AI Features Review' was scheduled", created_at: new Date(Date.now() - 48 * 3600000).toISOString(), unread: true },
+    ])
+    const updated = mockNotifs.map((n: any) => n.id === nid ? { ...n, unread: false } : n)
+    localStorage.setItem("demo_notifications", JSON.stringify(updated))
+    return { data: { message: "Read" } }
+  }
+  if (url.includes("/api/notifications") && method === "GET") {
+    let mockNotifs = getStored("demo_notifications", [
+      { id: 1, text: "Aman moved 'JWT authorization middleware' to Testing", created_at: new Date(Date.now() - 4 * 3600000).toISOString(), unread: true },
+      { id: 2, text: "New Meeting 'Sprint 1 Planning & AI Features Review' was scheduled", created_at: new Date(Date.now() - 48 * 3600000).toISOString(), unread: true },
+      { id: 3, text: "Priya assigned task 'Set up project structure' to Aman", created_at: new Date(Date.now() - 72 * 3600000).toISOString(), unread: false },
+      { id: 4, text: "Rahul created project 'AI-Powered Project Lifecycle Platform'", created_at: new Date(Date.now() - 96 * 3600000).toISOString(), unread: false },
+    ])
+    return { data: mockNotifs }
   }
 
   // ADMIN

@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.models import user, project, task, meeting  # noqa: F401
-from app.routers import auth, projects, tasks, teams, ai, meetings, github, admin
+from app.models import user, project, task, meeting, announcement, notification  # noqa: F401
+from app.routers import auth, projects, tasks, teams, ai, meetings, github, admin, announcements, notifications
 from app.sockets import sio
 import socketio
 
@@ -48,6 +48,9 @@ app.include_router(ai.router)
 app.include_router(meetings.router)
 app.include_router(github.router)
 app.include_router(admin.router)
+app.include_router(announcements.router)
+app.include_router(notifications.router)
+
 
 # Combined ASGI app: HTTP requests fall through to `app` (FastAPI), Socket.IO
 # requests are handled by `sio`. Run with: uvicorn app.main:asgi_app --reload

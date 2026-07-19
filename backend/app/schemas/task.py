@@ -37,3 +37,20 @@ class TaskOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TaskCommentCreate(BaseModel):
+    content: str
+
+
+class TaskCommentOut(BaseModel):
+    id: int
+    task_id: int
+    user_id: int
+    content: str
+    created_at: datetime
+    user_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+

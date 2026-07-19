@@ -42,3 +42,13 @@ def test_me_returns_current_user(client, auth_headers):
     resp = client.get("/api/auth/me", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["email"] == "krushitha@test.dev"
+
+
+def test_login_succeeds_with_username(client):
+    client.post("/api/auth/signup", json={
+        "name": "Aman", "email": "aman@test.dev", "password": "correcthorse",
+    })
+    # Login with name (username) instead of email
+    resp = client.post("/api/auth/login", data={"username": "Aman", "password": "correcthorse"})
+    assert resp.status_code == 200
+    assert "access_token" in resp.json()

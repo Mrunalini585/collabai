@@ -7,7 +7,7 @@ import { Spinner } from '../components/ui'
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail]       = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
@@ -18,7 +18,7 @@ export default function Login() {
     setLoading(true)
     setError(null)
     try {
-      await login(email, password)
+      await login(username, password)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Login failed. Check your credentials.')
@@ -52,17 +52,17 @@ export default function Login() {
           <p className="text-slate-400 text-sm mb-8">Sign in to continue your project journey</p>
 
           <form onSubmit={submit} className="space-y-5">
-            {/* Email */}
+            {/* Username or Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Email</label>
+              <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Username or Email</label>
               <div className="relative">
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username or email address"
                   className="w-full bg-white/10 border border-white/20 text-white placeholder-slate-500 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-indigo-400 focus:bg-white/15 transition"
                 />
               </div>
@@ -70,7 +70,12 @@ export default function Login() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Password</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Password</label>
+                <Link to="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 transition">
+                  Forgot Password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input

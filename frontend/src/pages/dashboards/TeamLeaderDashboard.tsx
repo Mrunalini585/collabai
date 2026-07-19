@@ -11,6 +11,7 @@ export default function TeamLeaderDashboard() {
   const navigate = useNavigate()
   const [projects, setProjects]     = useState<Project[]>([])
   const [tasks, setTasks]           = useState<Task[]>([])
+  const [teammates, setTeammates]   = useState<any[]>([])
   const [risk, setRisk]             = useState<any>(null)
   const [sprintPlan, setSprintPlan] = useState<any>(null)
   const [loadingRisk, setLoadingRisk] = useState(false)
@@ -31,11 +32,27 @@ export default function TeamLeaderDashboard() {
           const { data: sprintData } = await api.post('/api/ai/sprint-plan', { project_id: data[0].id, num_sprints: 3 })
           setSprintPlan(sprintData)
         } catch {}
+        try {
+          const { data: teamData } = await api.get(`/api/projects/${data[0].id}/team/`)
+          setTeammates(teamData)
+        } catch {}
         setLoadingRisk(false)
       }
       setLoading(false)
     })
   }, [])
+
+  const handleAssignTask = async (taskId: number, assigneeId: number | null) => {
+    if (!projects[0]) return
+    try {
+      await api.patch(`/api/projects/${projects[0].id}/tasks/${taskId}`, {
+        assignee_id: assigneeId
+      })
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assignee_id: assigneeId } : t))
+    } catch (e) {
+      console.error("Failed to assign task", e)
+    }
+  }
 
   const done    = tasks.filter((t) => t.status === 'Done').length
   const inProg  = tasks.filter((t) => t.status === 'In Progress').length
@@ -179,11 +196,11 @@ export default function TeamLeaderDashboard() {
             </Card>
           </div>
 
-          {/* Recent tasks */}
+          {/* Recent tasks & assignments */}
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                <CheckCircle2 size={15} className="text-indigo-600" /> Recent Tasks
+                <CheckCircle2 size={15} className="text-indigo-600" /> Recent Tasks & Quick Assignment
               </div>
               <button onClick={() => navigate('/projects')} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
                 View Kanban <ArrowRight size={11} />
@@ -191,17 +208,33 @@ export default function TeamLeaderDashboard() {
             </div>
             <div className="space-y-2">
               {tasks.slice(0, 5).map((t) => (
-                <div key={t.id} className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${
-                    t.status === 'Done' ? 'bg-emerald-400' :
-                    t.status === 'In Progress' ? 'bg-indigo-400' :
-                    t.status === 'Testing' ? 'bg-amber-400' : 'bg-slate-300'
-                  }`} />
-                  <span className="text-sm text-slate-700 flex-1 truncate">{t.title}</span>
-                  <Badge tone={t.priority === 'High' ? 'red' : t.priority === 'Medium' ? 'amber' : 'green'}>
-                    {t.priority}
-                  </Badge>
-                  <span className="text-xs text-slate-400">{t.status}</span>
+                <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${
+                      t.status === 'Done' ? 'bg-emerald-400' :
+                      t.status === 'In Progress' ? 'bg-indigo-400' :
+                      t.status === 'Testing' ? 'bg-amber-400' : 'bg-slate-300'
+                    }`} />
+                    <span className="text-sm text-slate-755 font-medium truncate">{t.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Badge tone={t.priority === 'High' ? 'red' : t.priority === 'Medium' ? 'amber' : 'green'}>
+                      {t.priority}
+                    </Badge>
+                    <span className="text-xs text-slate-400 mr-2">{t.status}</span>
+                    
+                    {/* Teammate selection select */}
+                    <select
+                      value={t.assignee_id ?? ''}
+                      onChange={(e) => handleAssignTask(t.id, e.target.value ? Number(e.target.value) : null)}
+                      className="border border-slate-200 rounded-xl px-2 py-1 text-xs outline-none bg-white text-slate-655 font-sans cursor-pointer focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">Unassigned</option>
+                      {teammates.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               ))}
               {tasks.length === 0 && (

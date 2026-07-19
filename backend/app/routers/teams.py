@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 
 from app.database import get_db
-from app.models.project import TeamMember
+from app.models.project import TeamMember, Project
+from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.auth import UserOut
 from app.core.deps import get_current_user
@@ -33,4 +34,12 @@ def invite_member(project_id: int, payload: InviteRequest, db: Session = Depends
         raise HTTPException(status_code=400, detail="User is already a team member")
     db.add(TeamMember(project_id=project_id, user_id=user.id, role_in_team=payload.role_in_team))
     db.commit()
+    
+    # Generate notification
+    project = db.query(Project).filter(Project.id == project_id).first()
+    project_name = project.name if project else "a project"
+    db.add(Notification(user_id=user.id, text=f"You have been invited to the project '{project_name}'"))
+    db.commit()
+    
     return {"message": f"{user.name} added to the project"}
+
