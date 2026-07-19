@@ -70,7 +70,18 @@ api.interceptors.response.use(
       const config = err.config
       const url = config.url || ""
       const method = (config.method || "").toUpperCase()
-      const body = config.data ? JSON.parse(config.data) : {}
+      
+      // Parse body — handle both JSON strings and URLSearchParams (form-encoded login)
+      let body: any = {}
+      if (config.data) {
+        try {
+          body = JSON.parse(config.data)
+        } catch {
+          // Form-encoded: username=foo&password=bar
+          const params = new URLSearchParams(config.data)
+          params.forEach((v, k) => { body[k] = v })
+        }
+      }
 
       // Retrieve state
       let projects = getStored("demo_projects", SEED_PROJECTS)
@@ -83,10 +94,21 @@ api.interceptors.response.use(
       try {
         // --- 1. AUTHENTICATION ---
         if (url.includes("/api/auth/login")) {
-          const email = body.email || ""
-          const role = email.includes("leader") ? "team_leader" : email.includes("faculty") ? "faculty" : email.includes("admin") ? "admin" : "student"
-          const name = email.includes("leader") ? "Rahul (Leader)" : email.includes("faculty") ? "Dr. Verma" : email.includes("admin") ? "Admin" : "Priya"
-          
+          // body.username comes from URLSearchParams form; body.email from JSON
+          const email = body.username || body.email || "leader@collabai.com"
+          const role = email.includes("leader") ? "team_leader"
+            : email.includes("faculty") ? "faculty"
+            : email.includes("admin") ? "admin"
+            : "student"
+          const name = email.includes("leader") ? "Rahul (Leader)"
+            : email.includes("faculty") ? "Dr. Verma"
+            : email.includes("admin") ? "Administrator"
+            : email.includes("student2") ? "Aman (Developer)"
+            : "Priya (Developer)"
+
+          // Store mock user so /api/auth/me can return the same person
+          localStorage.setItem("mock_user", JSON.stringify({ id: 2, name, email, role }))
+
           return {
             data: {
               access_token: "mock_token_for_" + email,
@@ -97,9 +119,11 @@ api.interceptors.response.use(
         }
         
         if (url.includes("/api/auth/me")) {
-          return {
-            data: { id: 2, name: "Rahul (Leader)", email: "leader@collabai.com", role: "team_leader" }
-          }
+          const stored = localStorage.getItem("mock_user")
+          const mockUser = stored
+            ? JSON.parse(stored)
+            : { id: 2, name: "Rahul (Leader)", email: "leader@collabai.com", role: "team_leader" }
+          return { data: mockUser }
         }
         
         if (url.includes("/api/auth/profile") && method === "PUT") {
