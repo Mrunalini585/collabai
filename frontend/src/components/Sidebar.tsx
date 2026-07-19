@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FolderKanban, Bot, FileText, Video, Github,
   BarChart3, MessageSquare, ShieldCheck, Settings, LogOut, Sparkles,
-  Zap, Users, ChevronRight,
+  Zap, Users, ChevronRight, X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -40,7 +40,7 @@ const SECTIONS = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { logout, user } = useAuth()
   const navigate = useNavigate()
 
@@ -68,18 +68,28 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 shrink-0 flex flex-col"
+    <div className="w-64 shrink-0 flex flex-col h-full"
       style={{ background: 'linear-gradient(180deg, #0f0f23 0%, #12122e 50%, #0f0f23 100%)' }}>
 
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-5 border-b border-white/8">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow glow-indigo shrink-0">
-          <Sparkles size={15} className="text-white" />
+      <div className="h-16 flex items-center justify-between px-5 border-b border-white/8">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow glow-indigo shrink-0">
+            <Sparkles size={15} className="text-white" />
+          </div>
+          <div>
+            <div className="text-white font-bold text-sm leading-tight">CollabAI</div>
+            <div className="text-indigo-400 text-[10px] leading-tight">Project Platform</div>
+          </div>
         </div>
-        <div>
-          <div className="text-white font-bold text-sm leading-tight">CollabAI</div>
-          <div className="text-indigo-400 text-[10px] leading-tight">Project Platform</div>
-        </div>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition lg:hidden"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -96,6 +106,7 @@ export default function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  onClick={onClose}
                   className={({ isActive }) =>
                     `nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
                       isActive

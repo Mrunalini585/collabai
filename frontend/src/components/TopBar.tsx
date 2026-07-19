@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Search, Bell, ChevronDown, LogOut, Settings, User, Sparkles } from 'lucide-react'
+import { Search, Bell, ChevronDown, LogOut, Settings, User, Sparkles, Menu } from 'lucide-react'
 import { Avatar } from './ui'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -18,7 +18,7 @@ function formatNotificationTime(createdAtStr?: string) {
   return `${days}d ago`
 }
 
-export default function TopBar({ title, subtitle }: { title: string; subtitle?: string | null }) {
+export default function TopBar({ title, subtitle, onMenuClick }: { title: string; subtitle?: string | null; onMenuClick: () => void }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [showDropdown, setShowDropdown] = useState(false)
@@ -98,9 +98,17 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
   return (
     <div className="h-16 shrink-0 bg-white border-b border-slate-200/80 flex items-center justify-between px-6 shadow-sm">
       {/* Title */}
-      <div>
-        <h1 className="font-bold text-slate-800 text-lg leading-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-slate-400 leading-tight">{subtitle}</p>}
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={onMenuClick}
+          className="p-1.5 -ml-2 rounded-xl hover:bg-slate-100 lg:hidden text-slate-500 hover:text-slate-700 transition"
+        >
+          <Menu size={20} />
+        </button>
+        <div>
+          <h1 className="font-bold text-slate-800 text-lg leading-tight">{title}</h1>
+          {subtitle && <p className="text-xs text-slate-400 leading-tight">{subtitle}</p>}
+        </div>
       </div>
 
       {/* Right controls */}
